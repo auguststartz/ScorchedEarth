@@ -19,9 +19,9 @@ export class WebSocketHandler {
   private heartbeatInterval: Timer | null = null;
   private queueCheckInterval: Timer | null = null;
 
-  constructor() {
+  constructor(matchHistory?: any) {
     this.queue = new MatchmakingQueue();
-    this.gameEngine = new GameEngine();
+    this.gameEngine = new GameEngine(undefined, matchHistory);
     this.startHeartbeat();
     this.startQueueMonitor();
   }

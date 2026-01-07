@@ -15,6 +15,9 @@ class LobbyClient {
 
         // Update stats every 5 seconds
         setInterval(() => this.fetchStats(), 5000);
+
+        // Load match history
+        this.loadMatchHistory();
     }
 
     initializeElements() {
@@ -41,6 +44,9 @@ class LobbyClient {
         // Stats
         this.onlineCount = document.getElementById('online-count');
         this.activeGames = document.getElementById('active-games');
+
+        // Match history
+        this.matchHistoryContainer = document.getElementById('match-history');
     }
 
     attachEventListeners() {
@@ -55,6 +61,11 @@ class LobbyClient {
             if (e.key === 'Enter') {
                 this.findMatch();
             }
+        });
+
+        // Reload match history when player name changes
+        this.playerNameInput.addEventListener('blur', () => {
+            this.loadMatchHistory();
         });
     }
 
@@ -79,6 +90,81 @@ class LobbyClient {
         } catch (error) {
             console.error('Failed to fetch stats:', error);
         }
+    }
+
+    async loadMatchHistory() {
+        const playerName = this.playerNameInput.value.trim();
+        if (!playerName || playerName.length < 3) {
+            // No name entered yet, show placeholder
+            this.matchHistoryContainer.innerHTML = '<p class="placeholder">Enter your name to see match history</p>';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/match-history/${encodeURIComponent(playerName)}`);
+            const result = await response.json();
+
+            if (!result.success || !result.data) {
+                this.matchHistoryContainer.innerHTML = '<p class="placeholder">No match history yet. Play your first game!</p>';
+                return;
+            }
+
+            this.displayMatchHistory(result.data);
+        } catch (error) {
+            console.error('Failed to load match history:', error);
+            this.matchHistoryContainer.innerHTML = '<p class="placeholder">Failed to load match history</p>';
+        }
+    }
+
+    displayMatchHistory(history) {
+        const { totalGames, wins, losses, draws, recentMatches } = history;
+        const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : 0;
+
+        let html = `
+            <div class="history-stats">
+                <div class="stat-box">
+                    <div class="stat-label">Total Games</div>
+                    <div class="stat-number">${totalGames}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Win Rate</div>
+                    <div class="stat-number">${winRate}%</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Record</div>
+                    <div class="stat-number">${wins}W - ${losses}L - ${draws}D</div>
+                </div>
+            </div>
+        `;
+
+        if (recentMatches && recentMatches.length > 0) {
+            html += '<div class="recent-matches"><h3>Recent Matches</h3>';
+
+            for (const match of recentMatches.slice(0, 5)) {
+                const date = new Date(match.timestamp).toLocaleDateString();
+                const resultClass = match.result === 'win' ? 'win' : match.result === 'loss' ? 'loss' : 'draw';
+                const resultText = match.result.toUpperCase();
+                const opponentType = match.opponentType === 'ai' ?
+                    `${match.opponentName} (${match.aiDifficulty || 'medium'})` :
+                    match.opponentName;
+
+                html += `
+                    <div class="match-card ${resultClass}">
+                        <div class="match-result">${resultText}</div>
+                        <div class="match-opponent">vs ${opponentType}</div>
+                        <div class="match-stats">
+                            <span>DMG: ${match.playerStats.damageDealt}</span>
+                            <span>ACC: ${(match.playerStats.accuracy * 100).toFixed(0)}%</span>
+                        </div>
+                        <div class="match-date">${date}</div>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+        }
+
+        this.matchHistoryContainer.innerHTML = html;
     }
 
     connectWebSocket() {

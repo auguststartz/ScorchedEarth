@@ -9,6 +9,7 @@ import { PhysicsEngine, type ProjectileConfig, type TrajectoryPoint, WeaponPhysi
 import { WEAPONS, WeaponInventory, WeaponEffects, type WeaponType } from './weapons';
 import { MessageType } from '../websocket/messages';
 import { AIManager } from '../ai/manager';
+import { MatchHistoryStorage } from '../storage/match-history';
 
 export interface GameConfig {
     canvasWidth: number;
@@ -20,11 +21,13 @@ export interface GameConfig {
 export class GameEngine {
     private gameManager: GameStateManager;
     private aiManager: AIManager;
+    private matchHistory: MatchHistoryStorage;
     private config: GameConfig;
 
-    constructor(config?: Partial<GameConfig>) {
+    constructor(config?: Partial<GameConfig>, matchHistory?: MatchHistoryStorage) {
         this.gameManager = new GameStateManager();
         this.aiManager = new AIManager();
+        this.matchHistory = matchHistory || new MatchHistoryStorage();
         this.config = {
             canvasWidth: config?.canvasWidth || 1200,
             canvasHeight: config?.canvasHeight || 600,
@@ -531,6 +534,9 @@ export class GameEngine {
             turns: game.turnNumber
         });
 
+        // Save match results to history (for human players only)
+        this.saveMatchHistory(game, winner);
+
         this.broadcast(game, {
             type: MessageType.GAME_OVER,
             timestamp: Date.now(),
@@ -559,6 +565,62 @@ export class GameEngine {
         setTimeout(() => {
             this.gameManager.deleteGame(game.id);
         }, 60000); // 1 minute
+    }
+
+    private async saveMatchHistory(game: GameState, winner: Player | undefined): Promise<void> {
+        try {
+            // Save match for each human player
+            for (const player of game.players) {
+                if (player.type !== 'human') continue;
+
+                // Find opponent
+                const opponent = game.players.find(p => p.id !== player.id);
+                if (!opponent) continue;
+
+                // Determine result
+                let result: 'win' | 'loss' | 'draw';
+                if (!winner) {
+                    result = 'draw';
+                } else if (winner.id === player.id) {
+                    result = 'win';
+                } else {
+                    result = 'loss';
+                }
+
+                // Get AI difficulty if opponent is AI
+                let aiDifficulty: 'easy' | 'medium' | 'hard' | undefined;
+                if (opponent.type === 'ai') {
+                    // Extract difficulty from AI name
+                    if (opponent.name.includes('Novice')) aiDifficulty = 'easy';
+                    else if (opponent.name.includes('Elite')) aiDifficulty = 'hard';
+                    else aiDifficulty = 'medium';
+                }
+
+                await this.matchHistory.saveMatch({
+                    timestamp: Date.now(),
+                    playerName: player.name,
+                    opponentName: opponent.name,
+                    opponentType: opponent.type,
+                    result,
+                    playerStats: {
+                        damageDealt: player.stats.damageDealt,
+                        accuracy: player.stats.shotsTotal > 0
+                            ? player.stats.shotsHit / player.stats.shotsTotal
+                            : 0,
+                        shotsTotal: player.stats.shotsTotal,
+                        shotsHit: player.stats.shotsHit,
+                        finalHp: player.hp
+                    },
+                    opponentStats: {
+                        finalHp: opponent.hp
+                    },
+                    totalTurns: game.turnNumber,
+                    aiDifficulty
+                });
+            }
+        } catch (error) {
+            logger.error('Failed to save match history', { error, gameId: game.id });
+        }
     }
 
     private broadcastGameState(game: GameState): void {

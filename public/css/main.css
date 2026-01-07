@@ -280,20 +280,107 @@ header h1 {
     padding: 40px;
 }
 
-.match-item {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    border-left: 4px solid #4ecdc4;
+.history-stats {
+    display: flex;
+    gap: 20px;
+    justify-content: space-around;
+    margin-bottom: 30px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 20px;
+    border-radius: 8px;
 }
 
-.match-item.win {
+.stat-box {
+    text-align: center;
+    flex: 1;
+}
+
+.stat-box .stat-label {
+    font-size: 0.85rem;
+    color: #999;
+    margin-bottom: 8px;
+}
+
+.stat-box .stat-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #4ecdc4;
+}
+
+.recent-matches h3 {
+    color: #e0e0e0;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.match-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    border-left: 4px solid #666;
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 8px;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.match-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.match-card.win {
     border-left-color: #4ecdc4;
 }
 
-.match-item.loss {
+.match-card.win .match-result {
+    color: #4ecdc4;
+}
+
+.match-card.loss {
     border-left-color: #ff6b6b;
+}
+
+.match-card.loss .match-result {
+    color: #ff6b6b;
+}
+
+.match-card.draw {
+    border-left-color: #ffa500;
+}
+
+.match-card.draw .match-result {
+    color: #ffa500;
+}
+
+.match-result {
+    font-weight: bold;
+    font-size: 1.1rem;
+    grid-row: 1 / 3;
+}
+
+.match-opponent {
+    color: #e0e0e0;
+    font-size: 0.95rem;
+    grid-column: 2;
+}
+
+.match-stats {
+    color: #999;
+    font-size: 0.85rem;
+    grid-column: 2;
+    display: flex;
+    gap: 15px;
+}
+
+.match-date {
+    color: #777;
+    font-size: 0.8rem;
+    grid-column: 3;
+    grid-row: 1 / 3;
+    text-align: right;
 }
 
 /* Footer */

@@ -3,9 +3,15 @@
 import { Elysia } from 'elysia';
 import { logger } from './utils/logger';
 import { WebSocketHandler, type WebSocketData } from './websocket/handler';
+import { MatchHistoryStorage } from './storage/match-history';
 
 const PORT = process.env.PORT || 3000;
-const wsHandler = new WebSocketHandler();
+
+// Initialize match history storage
+const matchHistory = new MatchHistoryStorage();
+await matchHistory.initialize();
+
+const wsHandler = new WebSocketHandler(matchHistory);
 
 const app = new Elysia()
   .get('/', () => Bun.file('public/index.html'))
@@ -27,6 +33,32 @@ const app = new Elysia()
       queueSize: stats.queueSize,
       timestamp: Date.now()
     };
+  })
+
+  // Match history endpoint
+  .get('/api/match-history/:playerName', async ({ params: { playerName } }) => {
+    try {
+      const history = await matchHistory.getPlayerHistory(playerName);
+
+      if (!history) {
+        return {
+          success: true,
+          data: null,
+          message: 'No match history found for this player'
+        };
+      }
+
+      return {
+        success: true,
+        data: history
+      };
+    } catch (error) {
+      logger.error('Failed to fetch match history', { error, playerName });
+      return {
+        success: false,
+        error: 'Failed to fetch match history'
+      };
+    }
   })
 
   // WebSocket endpoint
