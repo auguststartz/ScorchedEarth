@@ -40,6 +40,7 @@ export class GameEngine {
             name: string;
             type: 'human' | 'ai';
             socket: ServerWebSocket<any> | null;
+            aiDifficulty?: 'easy' | 'medium' | 'hard';
         }>
     ): GameState {
         logger.info('Creating new game', { gameId, playerCount: players.length });
@@ -97,9 +98,12 @@ export class GameEngine {
         const game = this.gameManager.createGame(gameId, gamePlayers, terrain, wind);
 
         // Register AI players
-        for (const player of gamePlayers) {
+        for (let i = 0; i < gamePlayers.length; i++) {
+            const player = gamePlayers[i];
             if (player.type === 'ai') {
-                this.aiManager.registerAI(player.id, 'medium');
+                const difficulty = players[i].aiDifficulty || 'medium';
+                this.aiManager.registerAI(player.id, difficulty);
+                logger.info('Registered AI player', { playerId: player.id, difficulty });
             }
         }
 

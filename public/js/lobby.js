@@ -22,6 +22,7 @@ class LobbyClient {
         this.playerNameInput = document.getElementById('player-name');
         this.findMatchBtn = document.getElementById('find-match-btn');
         this.vsAiBtn = document.getElementById('vs-ai-btn');
+        this.aiDifficultySelect = document.getElementById('ai-difficulty');
         this.errorMessage = document.getElementById('error-message');
         this.playerSetup = document.getElementById('player-setup');
 
@@ -34,6 +35,7 @@ class LobbyClient {
         // Timeout modal
         this.timeoutModal = document.getElementById('timeout-modal');
         this.playVsAiModal = document.getElementById('play-vs-ai-modal');
+        this.aiDifficultyModalSelect = document.getElementById('ai-difficulty-modal');
         this.keepWaitingBtn = document.getElementById('keep-waiting-btn');
 
         // Stats
@@ -193,13 +195,16 @@ class LobbyClient {
 
             console.log('Sending PLAY_VS_COMPUTER message');
 
+            // Get selected difficulty
+            const difficulty = this.aiDifficultySelect.value;
+
             // Request immediate AI match
             this.sendMessage({
                 type: 'PLAY_VS_COMPUTER',
                 timestamp: Date.now(),
                 payload: {
                     playerName: this.playerName,
-                    difficulty: 'medium'
+                    difficulty: difficulty
                 }
             });
 
@@ -247,7 +252,19 @@ class LobbyClient {
 
     acceptAIMatch() {
         this.hideTimeoutModal();
-        // Server will auto-start AI match after extended timeout
+
+        // Get selected difficulty from modal
+        const difficulty = this.aiDifficultyModalSelect.value;
+
+        // Request AI match with selected difficulty
+        this.sendMessage({
+            type: 'PLAY_VS_COMPUTER',
+            timestamp: Date.now(),
+            payload: {
+                playerName: this.playerName,
+                difficulty: difficulty
+            }
+        });
     }
 
     keepWaiting() {

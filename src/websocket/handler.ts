@@ -53,9 +53,9 @@ export class WebSocketHandler {
     for (const player of timedOutPlayers) {
       const waitTime = Date.now() - player.joinedAt;
       if (waitTime >= 90000) {
-        // Auto-start with AI
+        // Auto-start with AI (default medium difficulty)
         this.queue.removePlayer(player.id);
-        this.startGameWithAI(player);
+        this.startGameWithAI(player, 'medium');
       } else if (!player.timeoutNotified) {
         // Send timeout notification
         this.sendTimeoutNotification(player);
@@ -104,13 +104,20 @@ export class WebSocketHandler {
     }
   }
 
-  private startGameWithAI(player: QueuedPlayer): void {
+  private startGameWithAI(player: QueuedPlayer, difficulty: 'easy' | 'medium' | 'hard' = 'medium'): void {
     try {
-      logger.info('Starting game with AI', { playerId: player.id, playerName: player.name });
+      logger.info('Starting game with AI', { playerId: player.id, playerName: player.name, difficulty });
 
       const gameId = crypto.randomUUID();
 
-      logger.info('Creating game with AI opponent', { gameId });
+      logger.info('Creating game with AI opponent', { gameId, difficulty });
+
+      // Set AI name based on difficulty
+      const aiNames = {
+        easy: 'CPU-Novice',
+        medium: 'CPU-Alpha',
+        hard: 'CPU-Elite'
+      };
 
       // Create game with AI opponent
       const game = this.gameEngine.createGame(
@@ -124,9 +131,10 @@ export class WebSocketHandler {
           },
           {
             id: 'ai-' + crypto.randomUUID(),
-            name: 'CPU-Alpha',
+            name: aiNames[difficulty],
             type: 'ai' as const,
-            socket: null
+            socket: null,
+            aiDifficulty: difficulty
           }
         ]
       );
@@ -385,7 +393,12 @@ export class WebSocketHandler {
       ws.data.playerName = playerName;
       ws.data.authenticated = true;
 
-      logger.info('Play vs. Computer requested', { playerId, playerName, difficulty: difficulty || 'medium' });
+      // Validate difficulty
+      const validDifficulty = ['easy', 'medium', 'hard'].includes(difficulty)
+        ? difficulty as 'easy' | 'medium' | 'hard'
+        : 'medium';
+
+      logger.info('Play vs. Computer requested', { playerId, playerName, difficulty: validDifficulty });
 
       // Immediately start game with AI (don't add to queue)
       this.startGameWithAI({
@@ -394,7 +407,7 @@ export class WebSocketHandler {
         socket: ws,
         joinedAt: Date.now(),
         timeoutNotified: false
-      });
+      }, validDifficulty);
     } catch (error) {
       logger.error('Error in handlePlayVsComputer', { error });
       // Send error to client so they know what happened

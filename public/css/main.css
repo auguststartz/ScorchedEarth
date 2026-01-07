@@ -88,6 +88,37 @@ header h1 {
     background: rgba(78, 205, 196, 0.1);
 }
 
+/* Difficulty Selector */
+.difficulty-select {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(78, 205, 196, 0.3);
+    border-radius: 5px;
+    color: #e0e0e0;
+    font-size: 1rem;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    transition: border-color 0.3s, background 0.3s;
+}
+
+.difficulty-select:hover {
+    border-color: #4ecdc4;
+    background: rgba(78, 205, 196, 0.1);
+}
+
+.difficulty-select:focus {
+    outline: none;
+    border-color: #4ecdc4;
+    background: rgba(78, 205, 196, 0.15);
+}
+
+.difficulty-select option {
+    background: #1a1a2e;
+    color: #e0e0e0;
+    padding: 10px;
+}
+
 /* Buttons */
 .button-group {
     display: flex;

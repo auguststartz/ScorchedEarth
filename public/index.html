@@ -27,6 +27,14 @@
                             autocomplete="off"
                         />
                     </div>
+                    <div class="input-group">
+                        <label for="ai-difficulty">AI Difficulty:</label>
+                        <select id="ai-difficulty" class="difficulty-select">
+                            <option value="easy">Easy - Basic aiming</option>
+                            <option value="medium" selected>Medium - Balanced strategy</option>
+                            <option value="hard">Hard - Advanced tactics</option>
+                        </select>
+                    </div>
                     <div class="button-group">
                         <button id="find-match-btn" class="btn btn-primary">
                             Find Match
@@ -61,6 +69,14 @@
                             Would you like to play against the computer or
                             continue waiting?
                         </p>
+                        <div class="input-group">
+                            <label for="ai-difficulty-modal">AI Difficulty:</label>
+                            <select id="ai-difficulty-modal" class="difficulty-select">
+                                <option value="easy">Easy</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
                         <div class="button-group">
                             <button
                                 id="play-vs-ai-modal"
