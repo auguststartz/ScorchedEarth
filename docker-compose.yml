@@ -16,7 +16,10 @@ services:
       - ./logs:/app/logs
     networks:
       - app-network
+      - proxy-network
 
 networks:
   app-network:
+    external: true
+  proxy-network
     external: true
