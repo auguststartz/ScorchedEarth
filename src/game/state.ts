@@ -1,6 +1,7 @@
 // Game state management
 
 import type { ServerWebSocket } from 'bun';
+import type { LavaPool } from './lava';
 
 export interface Player {
   id: string;
@@ -15,6 +16,7 @@ export interface Player {
     cluster: number;
     mirv: number;
     digger: number;
+    napalm: number;
   };
   stats: {
     shotsTotal: number;
@@ -34,6 +36,7 @@ export interface GameState {
   status: 'active' | 'completed';
   winner: string | null;
   createdAt: number;
+  lavaPools?: LavaPool[];
 }
 
 export class GameStateManager {

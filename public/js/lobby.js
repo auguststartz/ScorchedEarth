@@ -29,6 +29,41 @@ class LobbyClient {
         this.errorMessage = document.getElementById('error-message');
         this.playerSetup = document.getElementById('player-setup');
 
+        // Advanced settings
+        this.toggleSettingsBtn = document.getElementById('toggle-settings-btn');
+        this.advancedSettings = document.getElementById('advanced-settings');
+        this.resetSettingsBtn = document.getElementById('reset-settings-btn');
+        this.gravitySlider = document.getElementById('gravity-slider');
+        this.gravityValue = document.getElementById('gravity-value');
+
+        // Weapon inputs
+        this.weaponInputs = {
+            standard: {
+                damage: document.getElementById('standard-damage'),
+                ammo: document.getElementById('standard-ammo')
+            },
+            heavy: {
+                damage: document.getElementById('heavy-damage'),
+                ammo: document.getElementById('heavy-ammo')
+            },
+            cluster: {
+                damage: document.getElementById('cluster-damage'),
+                ammo: document.getElementById('cluster-ammo')
+            },
+            mirv: {
+                damage: document.getElementById('mirv-damage'),
+                ammo: document.getElementById('mirv-ammo')
+            },
+            digger: {
+                damage: document.getElementById('digger-damage'),
+                ammo: document.getElementById('digger-ammo')
+            },
+            napalm: {
+                damage: document.getElementById('napalm-damage'),
+                ammo: document.getElementById('napalm-ammo')
+            }
+        };
+
         // Matchmaking section
         this.matchmakingStatus = document.getElementById('matchmaking-status');
         this.queuePosition = document.getElementById('queue-position');
@@ -55,6 +90,13 @@ class LobbyClient {
         this.cancelQueueBtn.addEventListener('click', () => this.cancelQueue());
         this.playVsAiModal.addEventListener('click', () => this.acceptAIMatch());
         this.keepWaitingBtn.addEventListener('click', () => this.keepWaiting());
+
+        // Advanced settings
+        this.toggleSettingsBtn.addEventListener('click', () => this.toggleSettings());
+        this.resetSettingsBtn.addEventListener('click', () => this.resetSettingsToDefaults());
+        this.gravitySlider.addEventListener('input', (e) => {
+            this.gravityValue.textContent = e.target.value;
+        });
 
         // Allow Enter key to submit
         this.playerNameInput.addEventListener('keypress', (e) => {
@@ -167,6 +209,64 @@ class LobbyClient {
         this.matchHistoryContainer.innerHTML = html;
     }
 
+    toggleSettings() {
+        this.advancedSettings.classList.toggle('hidden');
+        this.toggleSettingsBtn.textContent = this.advancedSettings.classList.contains('hidden')
+            ? '► Advanced Settings'
+            : '▼ Advanced Settings';
+    }
+
+    resetSettingsToDefaults() {
+        this.gravitySlider.value = 980;
+        this.gravityValue.textContent = '980';
+
+        const defaults = {
+            standard: { damage: 30, ammo: -1 },
+            heavy: { damage: 50, ammo: 3 },
+            cluster: { damage: 20, ammo: 3 },
+            mirv: { damage: 35, ammo: 3 },
+            digger: { damage: 40, ammo: 3 },
+            napalm: { damage: 15, ammo: 2 }
+        };
+
+        for (const [weapon, values] of Object.entries(defaults)) {
+            this.weaponInputs[weapon].damage.value = values.damage;
+            this.weaponInputs[weapon].ammo.value = values.ammo;
+        }
+    }
+
+    gatherCustomSettings() {
+        return {
+            gravity: parseInt(this.gravitySlider.value),
+            weapons: {
+                standard: {
+                    damage: parseInt(this.weaponInputs.standard.damage.value),
+                    ammo: parseInt(this.weaponInputs.standard.ammo.value)
+                },
+                heavy: {
+                    damage: parseInt(this.weaponInputs.heavy.damage.value),
+                    ammo: parseInt(this.weaponInputs.heavy.ammo.value)
+                },
+                cluster: {
+                    damage: parseInt(this.weaponInputs.cluster.damage.value),
+                    ammo: parseInt(this.weaponInputs.cluster.ammo.value)
+                },
+                mirv: {
+                    damage: parseInt(this.weaponInputs.mirv.damage.value),
+                    ammo: parseInt(this.weaponInputs.mirv.ammo.value)
+                },
+                digger: {
+                    damage: parseInt(this.weaponInputs.digger.damage.value),
+                    ammo: parseInt(this.weaponInputs.digger.ammo.value)
+                },
+                napalm: {
+                    damage: parseInt(this.weaponInputs.napalm.damage.value),
+                    ammo: parseInt(this.weaponInputs.napalm.ammo.value)
+                }
+            }
+        };
+    }
+
     connectWebSocket() {
         return new Promise((resolve, reject) => {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -253,10 +353,14 @@ class LobbyClient {
 
         try {
             await this.connectWebSocket();
+            const customSettings = this.gatherCustomSettings();
             this.sendMessage({
                 type: 'MATCHMAKING_REQUEST',
                 timestamp: Date.now(),
-                payload: { playerName: this.playerName }
+                payload: {
+                    playerName: this.playerName,
+                    customSettings: customSettings
+                }
             });
 
             this.showMatchmaking();
@@ -281,8 +385,9 @@ class LobbyClient {
 
             console.log('Sending PLAY_VS_COMPUTER message');
 
-            // Get selected difficulty
+            // Get selected difficulty and custom settings
             const difficulty = this.aiDifficultySelect.value;
+            const customSettings = this.gatherCustomSettings();
 
             // Request immediate AI match
             this.sendMessage({
@@ -290,7 +395,8 @@ class LobbyClient {
                 timestamp: Date.now(),
                 payload: {
                     playerName: this.playerName,
-                    difficulty: difficulty
+                    difficulty: difficulty,
+                    customSettings: customSettings
                 }
             });
 

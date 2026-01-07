@@ -2,6 +2,7 @@
 
 import { logger } from '../utils/logger';
 import type { ServerWebSocket } from 'bun';
+import type { CustomGameSettings } from '../game/config';
 
 export interface QueuedPlayer {
   id: string;
@@ -9,6 +10,7 @@ export interface QueuedPlayer {
   socket: ServerWebSocket<any>;
   joinedAt: number;
   timeoutNotified: boolean;
+  customSettings?: CustomGameSettings;
 }
 
 export class MatchmakingQueue {

@@ -15,7 +15,10 @@ export enum MessageType {
   PLAYER_DISCONNECT = 'PLAYER_DISCONNECT',
   PING = 'PING',
   PONG = 'PONG',
-  ERROR = 'ERROR'
+  ERROR = 'ERROR',
+  LAVA_UPDATE = 'LAVA_UPDATE',
+  LAVA_DAMAGE = 'LAVA_DAMAGE',
+  LAVA_CLEARED = 'LAVA_CLEARED'
 }
 
 export interface BaseMessage {
@@ -81,6 +84,7 @@ export interface GameStateMessage extends BaseMessage {
         cluster: number;
         mirv: number;
         digger: number;
+        napalm: number;
       };
     }>;
     terrain: number[];
@@ -96,7 +100,7 @@ export interface PlayerActionMessage extends BaseMessage {
     playerId: string;
     angle: number;
     power: number;
-    weapon: 'standard' | 'heavy' | 'cluster' | 'mirv' | 'digger';
+    weapon: 'standard' | 'heavy' | 'cluster' | 'mirv' | 'digger' | 'napalm';
   };
 }
 
@@ -187,6 +191,33 @@ export interface ErrorMessage extends BaseMessage {
   };
 }
 
+export interface LavaUpdateMessage extends BaseMessage {
+  type: MessageType.LAVA_UPDATE;
+  payload: {
+    lavaPools: Array<{
+      id: string;
+      x: number;
+      y: number;
+      radius: number;
+      intensity: number;
+    }>;
+  };
+}
+
+export interface LavaDamageMessage extends BaseMessage {
+  type: MessageType.LAVA_DAMAGE;
+  payload: {
+    playerId: string;
+    damage: number;
+    newHp: number;
+  };
+}
+
+export interface LavaClearedMessage extends BaseMessage {
+  type: MessageType.LAVA_CLEARED;
+  payload: {};
+}
+
 export type WebSocketMessage =
   | PlayerConnectMessage
   | RequestAIMatchMessage
@@ -202,4 +233,7 @@ export type WebSocketMessage =
   | PlayerDisconnectMessage
   | PingMessage
   | PongMessage
-  | ErrorMessage;
+  | ErrorMessage
+  | LavaUpdateMessage
+  | LavaDamageMessage
+  | LavaClearedMessage;

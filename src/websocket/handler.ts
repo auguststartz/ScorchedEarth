@@ -6,6 +6,7 @@ import { Validator } from '../utils/validator';
 import { MessageTypes } from './message-types';
 import { MatchmakingQueue, type QueuedPlayer } from '../matchmaking/queue';
 import { GameEngine } from '../game/engine';
+import type { CustomGameSettings } from '../game/config';
 
 export interface WebSocketData {
   playerId: string;
@@ -70,6 +71,9 @@ export class WebSocketHandler {
 
     const gameId = crypto.randomUUID();
 
+    // Use first player's custom settings for the game
+    const customSettings = players[0].customSettings;
+
     // Create game using engine
     const game = this.gameEngine.createGame(
       gameId,
@@ -78,7 +82,8 @@ export class WebSocketHandler {
         name: p.name,
         type: 'human' as const,
         socket: p.socket
-      }))
+      })),
+      customSettings
     );
 
     // Send GAME_START message to all players
@@ -136,7 +141,8 @@ export class WebSocketHandler {
             socket: null,
             aiDifficulty: difficulty
           }
-        ]
+        ],
+        player.customSettings
       );
 
       logger.info('Game created successfully, sending GAME_START message', { gameId });
@@ -244,7 +250,7 @@ export class WebSocketHandler {
     ws: ServerWebSocket<WebSocketData>,
     data: any
   ): void {
-    const { playerName } = data.payload;
+    const { playerName, customSettings } = data.payload;
 
     const validation = Validator.validatePlayerName(playerName);
     if (!validation.valid) {
@@ -270,7 +276,8 @@ export class WebSocketHandler {
       name: playerName,
       socket: ws,
       joinedAt: Date.now(),
-      timeoutNotified: false
+      timeoutNotified: false,
+      customSettings: customSettings
     });
 
     // Send matchmaking status
@@ -373,7 +380,7 @@ export class WebSocketHandler {
     data: any
   ): void {
     try {
-      const { playerName, difficulty } = data.payload;
+      const { playerName, difficulty, customSettings } = data.payload;
 
       const validation = Validator.validatePlayerName(playerName);
       if (!validation.valid) {
@@ -406,7 +413,8 @@ export class WebSocketHandler {
         name: playerName,
         socket: ws,
         joinedAt: Date.now(),
-        timeoutNotified: false
+        timeoutNotified: false,
+        customSettings: customSettings
       }, validDifficulty);
     } catch (error) {
       logger.error('Error in handlePlayVsComputer', { error });

@@ -35,6 +35,68 @@
                             <option value="hard">Hard - Advanced tactics</option>
                         </select>
                     </div>
+
+                    <!-- Advanced Settings Toggle -->
+                    <div class="input-group">
+                        <button id="toggle-settings-btn" class="btn-link">
+                            ► Advanced Settings
+                        </button>
+                    </div>
+
+                    <!-- Advanced Settings Panel -->
+                    <div id="advanced-settings" class="settings-panel hidden">
+                        <h3>Game Settings</h3>
+
+                        <!-- Gravity Setting -->
+                        <div class="setting-group">
+                            <label for="gravity-slider">Gravity: <span id="gravity-value">980</span></label>
+                            <input type="range" id="gravity-slider" min="500" max="1500" value="980" step="10">
+                        </div>
+
+                        <!-- Weapon Settings Grid -->
+                        <h4>Weapon Configuration</h4>
+                        <div class="weapons-grid">
+                            <!-- Standard Shell -->
+                            <div class="weapon-settings">
+                                <h5>Standard Shell</h5>
+                                <label>Damage: <input type="number" id="standard-damage" value="30" min="10" max="100"></label>
+                                <label>Ammo: <input type="number" id="standard-ammo" value="-1" min="-1" max="99" title="-1 for unlimited"></label>
+                            </div>
+                            <!-- Heavy Missile -->
+                            <div class="weapon-settings">
+                                <h5>Heavy Missile</h5>
+                                <label>Damage: <input type="number" id="heavy-damage" value="50" min="10" max="100"></label>
+                                <label>Ammo: <input type="number" id="heavy-ammo" value="3" min="-1" max="99"></label>
+                            </div>
+                            <!-- Cluster Bomb -->
+                            <div class="weapon-settings">
+                                <h5>Cluster Bomb</h5>
+                                <label>Damage: <input type="number" id="cluster-damage" value="20" min="10" max="100"></label>
+                                <label>Ammo: <input type="number" id="cluster-ammo" value="3" min="-1" max="99"></label>
+                            </div>
+                            <!-- MIRV -->
+                            <div class="weapon-settings">
+                                <h5>MIRV</h5>
+                                <label>Damage: <input type="number" id="mirv-damage" value="35" min="10" max="100"></label>
+                                <label>Ammo: <input type="number" id="mirv-ammo" value="3" min="-1" max="99"></label>
+                            </div>
+                            <!-- Digger -->
+                            <div class="weapon-settings">
+                                <h5>Digger</h5>
+                                <label>Damage: <input type="number" id="digger-damage" value="40" min="10" max="100"></label>
+                                <label>Ammo: <input type="number" id="digger-ammo" value="3" min="-1" max="99"></label>
+                            </div>
+                            <!-- Napalm -->
+                            <div class="weapon-settings">
+                                <h5>Napalm</h5>
+                                <label>Damage: <input type="number" id="napalm-damage" value="15" min="10" max="100"></label>
+                                <label>Ammo: <input type="number" id="napalm-ammo" value="2" min="-1" max="99"></label>
+                            </div>
+                        </div>
+
+                        <button id="reset-settings-btn" class="btn btn-secondary btn-small">Reset to Defaults</button>
+                    </div>
+
                     <div class="button-group">
                         <button id="find-match-btn" class="btn btn-primary">
                             Find Match

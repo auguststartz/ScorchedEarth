@@ -1,6 +1,6 @@
 // Weapons system
 
-export type WeaponType = 'standard' | 'heavy' | 'cluster' | 'mirv' | 'digger';
+export type WeaponType = 'standard' | 'heavy' | 'cluster' | 'mirv' | 'digger' | 'napalm';
 
 export interface Weapon {
     type: WeaponType;
@@ -62,6 +62,16 @@ export const WEAPONS: Record<WeaponType, Weapon> = {
         explosionRadius: 45,
         startingAmmo: 3,
         specialEffect: 'digger'
+    },
+    napalm: {
+        type: 'napalm',
+        name: 'Napalm',
+        description: 'Creates flowing lava that burns tanks',
+        damage: 15,
+        splashRadius: 40,
+        explosionRadius: 35,
+        startingAmmo: 2,
+        specialEffect: 'napalm'
     }
 };
 
@@ -74,7 +84,8 @@ export class WeaponInventory {
             heavy: WEAPONS.heavy.startingAmmo,
             cluster: WEAPONS.cluster.startingAmmo,
             mirv: WEAPONS.mirv.startingAmmo,
-            digger: WEAPONS.digger.startingAmmo
+            digger: WEAPONS.digger.startingAmmo,
+            napalm: WEAPONS.napalm.startingAmmo
         };
     }
 
@@ -108,7 +119,8 @@ export class WeaponInventory {
             heavy: WEAPONS.heavy.startingAmmo,
             cluster: WEAPONS.cluster.startingAmmo,
             mirv: WEAPONS.mirv.startingAmmo,
-            digger: WEAPONS.digger.startingAmmo
+            digger: WEAPONS.digger.startingAmmo,
+            napalm: WEAPONS.napalm.startingAmmo
         };
     }
 }
@@ -228,6 +240,18 @@ export class WeaponEffects {
                 }
             }
         }
+    }
+
+    static applyNapalmEffect(
+        explosionX: number,
+        explosionY: number,
+        terrain: number[],
+        canvasHeight: number
+    ): void {
+        const weapon = WEAPONS.napalm;
+
+        // Create small crater (half size of normal explosion)
+        this.createCrater(explosionX, explosionY, weapon.explosionRadius * 0.5, terrain, canvasHeight);
     }
 
     private static createCrater(

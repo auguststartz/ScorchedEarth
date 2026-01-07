@@ -19,7 +19,7 @@ export interface ProjectileConfig {
 }
 
 export class PhysicsEngine {
-    private static readonly DEFAULT_GRAVITY = 980; // pixels per second squared (scaled for game)
+    public static readonly DEFAULT_GRAVITY = 980; // pixels per second squared (scaled for game)
     private static readonly DEFAULT_DT = 0.016; // 60 FPS (16ms)
     private static readonly MAX_VELOCITY = 800; // pixels per second
 

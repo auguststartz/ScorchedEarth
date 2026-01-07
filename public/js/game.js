@@ -178,6 +178,9 @@ class GameClient {
         this.ws.on('GAME_OVER', (payload) => this.handleGameOver(payload));
         this.ws.on('CHAT_MESSAGE', (payload) => this.handleChatMessage(payload));
         this.ws.on('PLAYER_DISCONNECT', (payload) => this.handlePlayerDisconnect(payload));
+        this.ws.on('LAVA_UPDATE', (payload) => this.handleLavaUpdate(payload));
+        this.ws.on('LAVA_DAMAGE', (payload) => this.handleLavaDamage(payload));
+        this.ws.on('LAVA_CLEARED', (payload) => this.handleLavaCleared(payload));
 
         // Connect and start heartbeat
         this.ws.playerId = this.playerId;
@@ -292,6 +295,38 @@ class GameClient {
 
     handlePlayerDisconnect(payload) {
         this.addChatMessage('system', `${payload.playerName} disconnected: ${payload.reason}`);
+    }
+
+    handleLavaUpdate(payload) {
+        console.log('Lava update:', payload);
+        if (payload.lavaPools && payload.lavaPools.length > 0) {
+            this.renderer.setLavaPools(payload.lavaPools);
+
+            // Add napalm explosion effect at impact point (center of lava pools)
+            const centerX = payload.lavaPools.reduce((sum, pool) => sum + pool.x, 0) / payload.lavaPools.length;
+            const centerY = payload.lavaPools.reduce((sum, pool) => sum + pool.y, 0) / payload.lavaPools.length;
+            this.renderer.addExplosion(centerX, centerY, 50, 'napalm');
+        }
+    }
+
+    handleLavaDamage(payload) {
+        console.log('Lava damage:', payload);
+        const player = this.gameData.players.find(p => p.id === payload.playerId);
+        if (player) {
+            player.hp = payload.newHp;
+            this.renderer.setPlayers(this.gameData.players);
+            this.updatePlayerHUD();
+
+            // Show feedback message
+            if (payload.playerId === this.playerId) {
+                this.addChatMessage('system', `Taking lava damage! (-${payload.damage} HP)`);
+            }
+        }
+    }
+
+    handleLavaCleared(payload) {
+        console.log('Lava cleared');
+        this.renderer.setLavaPools([]);
     }
 
     handleFire() {
@@ -475,7 +510,8 @@ class GameClient {
             heavy: 'Heavy Missile',
             cluster: 'Cluster Bomb',
             mirv: 'MIRV',
-            digger: 'Digger'
+            digger: 'Digger',
+            napalm: 'Napalm'
         };
 
         // Store current selection

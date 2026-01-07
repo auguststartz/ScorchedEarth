@@ -383,6 +383,145 @@ header h1 {
     text-align: right;
 }
 
+/* Advanced Settings */
+.btn-link {
+    background: none;
+    border: none;
+    color: #4ecdc4;
+    cursor: pointer;
+    font-size: 1rem;
+    font-family: 'Courier New', monospace;
+    padding: 10px 0;
+    text-align: left;
+    width: 100%;
+    transition: color 0.3s;
+}
+
+.btn-link:hover {
+    color: #6ee7de;
+}
+
+.settings-panel {
+    border: 2px solid rgba(78, 205, 196, 0.3);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px 0;
+    background: rgba(22, 33, 62, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.settings-panel h3 {
+    color: #4ecdc4;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+}
+
+.settings-panel h4 {
+    color: #c9c9c9;
+    margin: 20px 0 15px 0;
+    font-size: 1.1rem;
+}
+
+.setting-group {
+    margin-bottom: 20px;
+}
+
+.setting-group label {
+    display: block;
+    color: #c9c9c9;
+    margin-bottom: 10px;
+    font-size: 1rem;
+}
+
+.setting-group input[type="range"] {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.setting-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #4ecdc4;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.setting-group input[type="range"]::-webkit-slider-thumb:hover {
+    background: #6ee7de;
+}
+
+.setting-group input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #4ecdc4;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    transition: background 0.3s;
+}
+
+.setting-group input[type="range"]::-moz-range-thumb:hover {
+    background: #6ee7de;
+}
+
+.weapons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.weapon-settings {
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.weapon-settings h5 {
+    margin: 0 0 12px 0;
+    color: #4ecdc4;
+    font-size: 1rem;
+}
+
+.weapon-settings label {
+    display: block;
+    color: #c9c9c9;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.weapon-settings input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: #eaeaea;
+    font-size: 0.9rem;
+    font-family: 'Courier New', monospace;
+    margin-top: 4px;
+}
+
+.weapon-settings input[type="number"]:focus {
+    outline: none;
+    border-color: #4ecdc4;
+    background: rgba(78, 205, 196, 0.1);
+}
+
+.btn-small {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    min-width: auto;
+}
+
 /* Footer */
 footer {
     text-align: center;

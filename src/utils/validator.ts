@@ -49,7 +49,7 @@ export class Validator {
   }
 
   static validateWeapon(weapon: string): { valid: boolean; error?: string } {
-    const validWeapons = ['standard', 'heavy', 'cluster', 'mirv', 'digger'];
+    const validWeapons = ['standard', 'heavy', 'cluster', 'mirv', 'digger', 'napalm'];
 
     if (!weapon || typeof weapon !== 'string') {
       return { valid: false, error: 'Weapon type is required' };

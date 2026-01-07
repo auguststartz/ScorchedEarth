@@ -10,6 +10,8 @@ import { WEAPONS, WeaponInventory, WeaponEffects, type WeaponType } from './weap
 import { MessageType } from '../websocket/messages';
 import { AIManager } from '../ai/manager';
 import { MatchHistoryStorage } from '../storage/match-history';
+import type { CustomGameSettings } from './config';
+import { LavaManager } from './lava';
 
 export interface GameConfig {
     canvasWidth: number;
@@ -23,6 +25,8 @@ export class GameEngine {
     private aiManager: AIManager;
     private matchHistory: MatchHistoryStorage;
     private config: GameConfig;
+    private gameSettings: Map<string, CustomGameSettings> = new Map();
+    private lavaManagers: Map<string, LavaManager> = new Map();
 
     constructor(config?: Partial<GameConfig>, matchHistory?: MatchHistoryStorage) {
         this.gameManager = new GameStateManager();
@@ -44,9 +48,15 @@ export class GameEngine {
             type: 'human' | 'ai';
             socket: ServerWebSocket<any> | null;
             aiDifficulty?: 'easy' | 'medium' | 'hard';
-        }>
+        }>,
+        customSettings?: CustomGameSettings
     ): GameState {
         logger.info('Creating new game', { gameId, playerCount: players.length });
+
+        // Store custom settings for this game
+        if (customSettings) {
+            this.gameSettings.set(gameId, customSettings);
+        }
 
         // Generate terrain
         const terrainGen = new TerrainGenerator({
@@ -69,6 +79,23 @@ export class GameEngine {
             300
         );
 
+        // Get weapon ammo from custom settings or defaults
+        const weaponAmmo = customSettings ? {
+            standard: customSettings.weapons.standard.ammo,
+            heavy: customSettings.weapons.heavy.ammo,
+            cluster: customSettings.weapons.cluster.ammo,
+            mirv: customSettings.weapons.mirv.ammo,
+            digger: customSettings.weapons.digger.ammo,
+            napalm: customSettings.weapons.napalm.ammo
+        } : {
+            standard: WEAPONS.standard.startingAmmo,
+            heavy: WEAPONS.heavy.startingAmmo,
+            cluster: WEAPONS.cluster.startingAmmo,
+            mirv: WEAPONS.mirv.startingAmmo,
+            digger: WEAPONS.digger.startingAmmo,
+            napalm: WEAPONS.napalm.startingAmmo
+        };
+
         // Create player objects
         const gamePlayers: Player[] = players.map((p, index) => ({
             id: p.id,
@@ -80,13 +107,7 @@ export class GameEngine {
                 y: spawnPositions[index].y
             },
             hp: 100,
-            weapons: {
-                standard: WEAPONS.standard.startingAmmo, // -1 for unlimited
-                heavy: WEAPONS.heavy.startingAmmo,
-                cluster: WEAPONS.cluster.startingAmmo,
-                mirv: WEAPONS.mirv.startingAmmo,
-                digger: WEAPONS.digger.startingAmmo
-            },
+            weapons: weaponAmmo,
             stats: {
                 shotsTotal: 0,
                 shotsHit: 0,
@@ -99,6 +120,22 @@ export class GameEngine {
 
         // Create game state
         const game = this.gameManager.createGame(gameId, gamePlayers, terrain, wind);
+
+        // Initialize lava pools array
+        game.lavaPools = [];
+
+        // Create lava manager for this game
+        const lavaManager = new LavaManager();
+        lavaManager.setTerrain(terrain, this.config.canvasHeight);
+        this.lavaManagers.set(gameId, lavaManager);
+
+        // Start lava damage tick
+        lavaManager.startDamageTick((playerId, damage) => {
+            this.applyLavaDamage(game, playerId, damage);
+        }, game);
+
+        // Start lava flow simulation
+        lavaManager.startFlowSimulation();
 
         // Register AI players
         for (let i = 0; i < gamePlayers.length; i++) {
@@ -169,12 +206,17 @@ export class GameEngine {
             adjustedPower = power * (weaponPhysics.velocityModifier || 1);
         }
 
+        // Get custom gravity if available
+        const customSettings = this.gameSettings.get(gameId);
+        const gravity = customSettings?.gravity || PhysicsEngine.DEFAULT_GRAVITY;
+
         const config: ProjectileConfig = {
             startX: currentPlayer.position.x,
             startY: currentPlayer.position.y,
             angle,
             power: adjustedPower,
-            wind: game.wind
+            wind: game.wind,
+            gravity: gravity
         };
 
         const trajectory = PhysicsEngine.calculateTrajectory(config);
@@ -273,13 +315,28 @@ export class GameEngine {
         }, animationDuration); // Simulate flight time based on actual impact
     }
 
+    private getWeaponConfig(gameId: string, weaponType: WeaponType) {
+        const baseWeapon = WEAPONS[weaponType];
+        const customSettings = this.gameSettings.get(gameId);
+
+        if (!customSettings) {
+            return baseWeapon;
+        }
+
+        // Apply custom damage from settings
+        return {
+            ...baseWeapon,
+            damage: customSettings.weapons[weaponType].damage
+        };
+    }
+
     private processImpact(
         game: GameState,
         impactPoint: TrajectoryPoint,
         weaponType: WeaponType,
         attackerId: string
     ): void {
-        const weapon = WEAPONS[weaponType];
+        const weapon = this.getWeaponConfig(game.id, weaponType);
         const terrainCollision = new TerrainCollision(game.terrain, this.config.canvasHeight);
 
         // Apply weapon effects and collect secondary explosions
@@ -325,6 +382,39 @@ export class GameEngine {
                     game.terrain,
                     this.config.canvasHeight
                 );
+                break;
+            case 'napalm':
+                WeaponEffects.applyNapalmEffect(
+                    impactPoint.x,
+                    impactPoint.y,
+                    game.terrain,
+                    this.config.canvasHeight
+                );
+
+                // Create lava pools
+                const lavaManager = this.lavaManagers.get(game.id);
+                if (lavaManager) {
+                    const pools = lavaManager.createInitialPools(impactPoint.x, impactPoint.y, 6);
+                    game.lavaPools = lavaManager.getActivePools();
+
+                    // Update terrain for lava manager
+                    lavaManager.setTerrain(game.terrain, this.config.canvasHeight);
+
+                    // Broadcast lava creation
+                    this.broadcast(game, {
+                        type: MessageType.LAVA_UPDATE,
+                        timestamp: Date.now(),
+                        payload: {
+                            lavaPools: pools.map(p => ({
+                                id: p.id,
+                                x: p.x,
+                                y: p.y,
+                                radius: p.radius,
+                                intensity: p.intensity
+                            }))
+                        }
+                    });
+                }
                 break;
         }
 
@@ -423,6 +513,26 @@ export class GameEngine {
         if (this.gameManager.checkGameOver(game)) {
             this.endGame(game);
         } else {
+            // Clear lava pools on turn change
+            const lavaManager = this.lavaManagers.get(game.id);
+            if (lavaManager) {
+                lavaManager.clearAll();
+                game.lavaPools = [];
+
+                // Restart lava damage tick and flow for new turn
+                lavaManager.startDamageTick((playerId, damage) => {
+                    this.applyLavaDamage(game, playerId, damage);
+                }, game);
+                lavaManager.startFlowSimulation();
+
+                // Broadcast lava cleared
+                this.broadcast(game, {
+                    type: MessageType.LAVA_CLEARED,
+                    timestamp: Date.now(),
+                    payload: {}
+                });
+            }
+
             // Next turn
             this.gameManager.nextTurn(game);
             this.broadcast(game, {
@@ -561,10 +671,51 @@ export class GameEngine {
             }
         });
 
+        // Clean up lava manager
+        const lavaManager = this.lavaManagers.get(game.id);
+        if (lavaManager) {
+            lavaManager.clearAll();
+            this.lavaManagers.delete(game.id);
+        }
+
         // Clean up game after a delay
         setTimeout(() => {
             this.gameManager.deleteGame(game.id);
+            this.gameSettings.delete(game.id); // Clean up custom settings
         }, 60000); // 1 minute
+    }
+
+    private applyLavaDamage(game: GameState, playerId: string, damage: number): void {
+        const player = game.players.find(p => p.id === playerId);
+        if (!player || player.hp <= 0) return;
+
+        player.hp = Math.max(0, player.hp - damage);
+
+        logger.info('Lava damage applied', {
+            playerId,
+            playerName: player.name,
+            damage,
+            newHp: player.hp
+        });
+
+        // Broadcast lava damage
+        this.broadcast(game, {
+            type: MessageType.LAVA_DAMAGE,
+            timestamp: Date.now(),
+            payload: {
+                playerId,
+                damage,
+                newHp: player.hp
+            }
+        });
+
+        // Broadcast updated game state
+        this.broadcastGameState(game);
+
+        // Check game over
+        if (this.gameManager.checkGameOver(game)) {
+            this.endGame(game);
+        }
     }
 
     private async saveMatchHistory(game: GameState, winner: Player | undefined): Promise<void> {
