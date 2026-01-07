@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scorched Earth - Game</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/game.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- HUD -->
+        <div class="hud">
+            <div class="hud-left">
+                <div class="player-info" id="player1-info">
+                    <div class="player-name">Player 1</div>
+                    <div class="hp-bar">
+                        <div class="hp-fill" style="width: 100%"></div>
+                    </div>
+                    <div class="hp-text">100 HP</div>
+                </div>
+            </div>
+
+            <div class="hud-center">
+                <div class="turn-indicator" id="turn-indicator">
+                    <span class="turn-label">Current Turn:</span>
+                    <span class="turn-player">-</span>
+                </div>
+                <div class="wind-indicator" id="wind-indicator">
+                    <span class="wind-label">Wind:</span>
+                    <span class="wind-value">0</span>
+                    <span class="wind-arrow">→</span>
+                </div>
+                <div class="turn-timer" id="turn-timer">
+                    <span class="timer-value">45</span>s
+                </div>
+            </div>
+
+            <div class="hud-right">
+                <div class="player-info" id="player2-info">
+                    <div class="player-name">Player 2</div>
+                    <div class="hp-bar">
+                        <div class="hp-fill" style="width: 100%"></div>
+                    </div>
+                    <div class="hp-text">100 HP</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Canvas -->
+        <div class="canvas-wrapper">
+            <canvas id="game-canvas" width="1200" height="600"></canvas>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="control-section">
+                <h3>Weapon</h3>
+                <select id="weapon-select" class="weapon-select">
+                    <option value="standard">Standard Shell (5)</option>
+                    <option value="heavy">Heavy Missile (3)</option>
+                    <option value="cluster">Cluster Bomb (3)</option>
+                    <option value="mirv">MIRV (3)</option>
+                    <option value="digger">Digger (3)</option>
+                </select>
+            </div>
+
+            <div class="control-section">
+                <h3>Angle</h3>
+                <div class="slider-container">
+                    <input type="range" id="angle-slider" min="0" max="180" value="45" class="slider">
+                    <input type="number" id="angle-input" min="0" max="180" value="45" class="number-input">
+                    <span class="unit">°</span>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>Power</h3>
+                <div class="slider-container">
+                    <input type="range" id="power-slider" min="0" max="100" value="50" class="slider">
+                    <input type="number" id="power-input" min="0" max="100" value="50" class="number-input">
+                    <span class="unit">%</span>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <button id="fire-btn" class="btn btn-primary btn-large">
+                    FIRE!
+                </button>
+                <button id="forfeit-btn" class="btn btn-secondary">
+                    Forfeit
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat -->
+        <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-message system">Game started! Good luck!</div>
+            </div>
+            <div class="chat-input-container">
+                <input
+                    type="text"
+                    id="chat-input"
+                    placeholder="Type a message..."
+                    maxlength="200"
+                    autocomplete="off"
+                />
+                <button id="chat-send-btn" class="btn btn-secondary">Send</button>
+            </div>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div id="game-over-modal" class="modal hidden">
+            <div class="modal-content game-over-content">
+                <h2 id="game-over-title">Game Over</h2>
+                <div class="winner-announcement" id="winner-announcement">
+                    <div class="trophy">🏆</div>
+                    <h3 id="winner-name">Player Name</h3>
+                    <p class="winner-subtitle">Victory!</p>
+                </div>
+                <div class="match-stats" id="match-stats">
+                    <div class="stat-row">
+                        <span class="stat-label">Total Turns:</span>
+                        <span class="stat-value" id="stat-turns">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Your Damage:</span>
+                        <span class="stat-value" id="stat-damage">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Your Accuracy:</span>
+                        <span class="stat-value" id="stat-accuracy">-</span>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button id="play-again-btn" class="btn btn-primary">
+                        Play Again
+                    </button>
+                    <button id="return-lobby-btn" class="btn btn-secondary">
+                        Return to Lobby
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/websocket.js"></script>
+    <script src="/js/renderer.js"></script>
+    <script src="/js/game.js"></script>
+</body>
+</html>

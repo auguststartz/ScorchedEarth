@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  scorched-earth:
+    build: .
+    container_name: scorched-earth-game
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - LOG_LEVEL=info
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    external: true

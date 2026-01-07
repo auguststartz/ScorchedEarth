@@ -1,0 +1,30 @@
+{
+  "name": "scorched-earth",
+  "version": "1.0.0",
+  "description": "Multiplayer Scorched Earth artillery game",
+  "main": "src/server.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/server.ts",
+    "start": "bun run src/server.ts",
+    "build": "bun build src/server.ts --outdir ./dist --target bun",
+    "test": "bun test",
+    "healthcheck": "bun run healthcheck.js"
+  },
+  "keywords": [
+    "game",
+    "scorched-earth",
+    "multiplayer",
+    "artillery",
+    "bun"
+  ],
+  "author": "August Startz",
+  "license": "MIT",
+  "dependencies": {
+    "elysia": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "bun-types": "latest"
+  }
+}
